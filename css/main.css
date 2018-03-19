@@ -1,0 +1,24 @@
+body {
+	margin: 0;
+}
+
+.gameContainer {
+    height: 400px;
+    width: 800px;
+    border: 2px solid #777;
+    position: relative;
+}
+
+.box {
+	height: 10px;
+    width: 10px;
+    background: red;
+    position: absolute;
+}
+
+.hoops {
+	height: 400px;
+	width: 30px;
+	background: green;
+	position: absolute;
+}

@@ -1,5 +1,3 @@
-
-
 const frameDimensions = {
 	height: 390,
 	width: 790

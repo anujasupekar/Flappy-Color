@@ -25,9 +25,9 @@ class Box {
 		$(this.elementRef).css('background', this.colors[Math.floor(Math.random() * this.colors.length)]);
 	}
 
-	// getColor() {
-	// 	return this.elementRef.background;
-	// }
+	getColor() {
+		return $(this.elementRef).css('background');
+	}
 
 	limitBounds() {
 		if(this.boxPosition.top > frameDimensions.height) {
@@ -58,7 +58,6 @@ class Hoops {
 		this.position1 = {top: 0, left: 750};
 		this.position2 = {top: 135, left: 750};
 		this.position3 = {top: 270, left: 750};
-		this.isCurrent = false;
 		this.colors = ['red', 'green', 'blue'];
 		this.elementRef1 = this.createHoop(0);
 		this.elementRef2 = this.createHoop(1);
@@ -73,18 +72,6 @@ class Hoops {
 		$("#gameContainer").append(hoop);
 		return $(hoop);
 	}
-
-	// isCurrent() {
-	// 	return this.isCurrent;
-	// }
-
-	// setAsCurrent() {
-	// 	this.isCurrent = true;
-	// }
-
-	// resetCurrent() {
-	// 	this.isCurrent = false;
-	// }
 
 	setPosition() {
 		this.limitBounds();
@@ -128,17 +115,28 @@ class HoopCollection {
 			}, 2000);	
 	}
 
-	// setCurrentHoop() {
-	// 	this.hoopCollection.forEach(function(element) {
-	// 		if(element.position1.left<=150 && element.position1.left>=130) {
-	// 			element.setAsCurrent();
-	// 		}
-	// 		else if(element.position1.left< 130) {
-	// 			element.resetCurrent();
-	// 		}
-	// 	})
-	// }
-
+	checkValidPlay(box) {
+		this.hoopCollection.forEach(function(element) {
+			if(element.position1.left<=150 && element.position1.left>=130) {
+				if(box.boxPosition.top <= 130) {
+					if(box.getColor() != $(element.elementRef1).css('background')) {
+						console.log("Should exit here");
+						clearInterval(timer);
+					}
+				}
+				else if(box.boxPosition.top >= 135 && box.boxPosition.top < 265) {
+					if(box.getColor() != $(element.elementRef2).css('background')) {
+						clearInterval(timer);
+					}
+				}
+				else {
+					if(box.getColor() != $(element.elementRef3).css('background')) {
+						clearInterval(timer);
+					}
+				}
+			}
+		});
+	}
 }
 
 class Game {
@@ -158,47 +156,20 @@ class Game {
 		});
 	}
 
-	// gamePlay() {
-	// 	this.hoops.setCurrentHoop();
-	// 	this.hoops.hoopCollection.forEach(function(element) {
-	// 		if(element.isCurrent === true) {
-	// 			if(this.box.position.top <= 130) {
-	// 				if(this.box.getColor() != element.elementRef1.background) {
-	// 					return false;
-	// 				}
-	// 			}
-	// 			else if(this.box.position.top >= 135 && this.box.position.top < 265) {
-	// 				if(this.box.getColor() != element.elementRef2.background) {
-	// 					return false;
-	// 				}
-	// 			}
-	// 			else {
-	// 				if(this.box.getColor() != element.elementRef3.background) {
-	// 					return false;
-	// 				}
-	// 			}
-	// 		}
-	// 	});
-	// }
-
 	render() {
 		this.box.render(); 
 		this.hoops.hoopCollection.forEach(function(element) {
 			element.render();
 		});
+		this.hoops.checkValidPlay(this.box);
 	}
 }
 
 let game;
+let timer;
 
 $(document).ready(function() {
 	game = new Game();
 	let frameRate = 1000.0/60.0;
-	let timer = setInterval(()=> game.render(), frameRate);
-	// while(true) {
-	// 	if(!game.gamePlay()) {
-	// 		clearInterval(timer);
-	// 		timer = setInterval(game.render(), frameRate);
-	// 	}
-	// }
+	timer = setInterval(()=> game.render(), frameRate);
 });

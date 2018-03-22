@@ -59,9 +59,9 @@ class Hoops {
 		this.position2 = {top: 135, left: 750};
 		this.position3 = {top: 270, left: 750};
 		this.colors = ['red', 'green', 'blue'];
-		this.elementRef1 = this.createHoop(0);
-		this.elementRef2 = this.createHoop(1);
-		this.elementRef3 = this.createHoop(2);
+		this.hoop1 = this.createHoop(0);
+		this.hoop2 = this.createHoop(1);
+		this.hoop3 = this.createHoop(2);
 		this.setPosition();
 	}
 
@@ -75,22 +75,68 @@ class Hoops {
 
 	setPosition() {
 		this.limitBounds();
-		this.elementRef1.offset(this.position1);
-		this.elementRef2.offset(this.position2);
-		this.elementRef3.offset(this.position3);
+		this.hoop1.offset(this.position1);
+		this.hoop2.offset(this.position2);
+		this.hoop3.offset(this.position3);
 	}
 
 	limitBounds() {
 		if(this.position1.left <= 0) {
-			$(this.elementRef1).remove();
+			$(this.hoop1).remove();
 		}
 		if(this.position2.left <= 0) {
-			$(this.elementRef2).remove();
+			$(this.hoop2).remove();
 		}
 		if(this.position3.left <= 0) {
-			$(this.elementRef3).remove();
+			$(this.hoop3).remove();
 		}
 		
+	}
+
+	leftEdge() {
+		return this.position1.left;
+	}
+
+	getBottomCoordinate(hoopNumber) {
+		switch(hoopNumber) {
+			case 1:
+				return this.position1.top + 130;
+				break;
+			case 2:
+				return this.position2.top + 130;
+				break;
+			default:
+				return this.position3.top + 130;
+				break;
+		}
+	}
+
+	getUpperCoordinate(hoopNumber) {
+		switch(hoopNumber) {
+			case 1:
+				return this.position1.top;
+				break;
+			case 2:
+				return this.position2.top;
+				break;
+			default:
+				return this.position3.top ;
+				break;
+		}
+	}
+
+	getColor(hoopNumber) {
+		switch(hoopNumber) {
+			case 1:
+				return $(this.hoop1).css('background');
+				break;
+			case 2:
+				return $(this.hoop2).css('background');
+				break;
+			default:
+				return $(this.hoop3).css('background');
+				break;
+		}
 	}
 
 	render() {
@@ -116,26 +162,32 @@ class HoopCollection {
 	}
 
 	checkValidPlay(box) {
-		this.hoopCollection.forEach(function(element) {
-			if(element.position1.left<=150 && element.position1.left>=130) {
-				if(box.boxPosition.top <= 130) {
-					if(box.getColor() != $(element.elementRef1).css('background')) {
+		let that = this;
+		this.hoopCollection.forEach(function(hoop) {
+			if(hoop.leftEdge()<=150 && hoop.leftEdge()>=130) {
+				if(box.boxPosition.top <= hoop.getBottomCoordinate(1)) {
+					if(box.getColor() != hoop.getColor(1)) {
 						console.log("Should exit here");
-						clearInterval(timer);
+						that.restartGame();
 					}
 				}
-				else if(box.boxPosition.top >= 135 && box.boxPosition.top < 265) {
-					if(box.getColor() != $(element.elementRef2).css('background')) {
-						clearInterval(timer);
+				else if(box.boxPosition.top >= hoop.getUpperCoordinate(2) && box.boxPosition.top < hoop.getBottomCoordinate(2)) {
+					if(box.getColor() != hoop.getColor(2)) {
+						that.restartGame();
 					}
 				}
 				else {
-					if(box.getColor() != $(element.elementRef3).css('background')) {
-						clearInterval(timer);
+					if(box.getColor() != hoop.getColor(3)) {
+						that.restartGame();
 					}
 				}
 			}
 		});
+	}
+
+	restartGame() {
+		clearInterval(timer);
+		console.log(timer);
 	}
 }
 
@@ -172,4 +224,7 @@ $(document).ready(function() {
 	game = new Game();
 	let frameRate = 1000.0/60.0;
 	timer = setInterval(()=> game.render(), frameRate);
+	// if(timer === 3) {
+	// 	timer = setInterval(()=> game.render(), frameRate);
+	// }
 });

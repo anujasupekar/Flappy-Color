@@ -13,7 +13,6 @@ class Box {
 		this.colors = ['red', 'green', 'blue'];
 		this.elementRef = $("#box");
 		this.setPosition();
-		this.setColor();
 	}
 
 	setPosition() {
@@ -21,12 +20,13 @@ class Box {
 		this.elementRef.offset(this.boxPosition);
 	}
 
-	setColor() {
-		$(this.elementRef).css('background', this.colors[Math.floor(Math.random() * this.colors.length)]);
-	}
-
 	getColor() {
 		return $(this.elementRef).css('background');
+	}
+
+	changeColor() {
+		console.log("i come here");
+		$(this.elementRef).css('background', this.colors[Math.floor(Math.random() * this.colors.length)]);
 	}
 
 	limitBounds() {
@@ -82,19 +82,22 @@ class Hoops {
 
 	limitBounds() {
 		if(this.position1.left <= 0) {
-			$(this.hoop1).remove();
+			this.removeHoops();
 		}
-		if(this.position2.left <= 0) {
-			$(this.hoop2).remove();
-		}
-		if(this.position3.left <= 0) {
-			$(this.hoop3).remove();
-		}
-		
+	}
+
+	removeHoops() {
+		$(this.hoop1).remove();
+		$(this.hoop2).remove();
+		$(this.hoop3).remove();
 	}
 
 	leftEdge() {
 		return this.position1.left;
+	}
+
+	rightEdge() {
+		return this.position1.left + 50;
 	}
 
 	getBottomCoordinate(hoopNumber) {
@@ -152,42 +155,53 @@ class HoopCollection {
 	constructor() {
 		this.hoopCollection = [];
 		this.createHoops();
+		this.boxColorChanged = false;
+		this.interval = null;
 	}
 
 	createHoops() {
-		let that = this;
-		let interval = setInterval(function() {
+		const that = this;
+		this.interval = setInterval(function() {
 			that.hoopCollection.push(new Hoops());
-			}, 2000);	
+			}, 2000);
 	}
 
 	checkValidPlay(box) {
-		let that = this;
-		this.hoopCollection.forEach(function(hoop) {
-			if(hoop.leftEdge()<=150 && hoop.leftEdge()>=130) {
+		let isHoopPresent = false;
+		for(let i=0; i<this.hoopCollection.length; i++) {
+			const hoop = this.hoopCollection[i];
+			if(hoop.leftEdge()<=169 && hoop.leftEdge()>99) {
+				isHoopPresent = true;
+				this.boxColorChanged = false;
 				if(box.boxPosition.top <= hoop.getBottomCoordinate(1)) {
 					if(box.getColor() != hoop.getColor(1)) {
-						console.log("Should exit here");
-						that.restartGame();
+						return false;
 					}
 				}
 				else if(box.boxPosition.top >= hoop.getUpperCoordinate(2) && box.boxPosition.top < hoop.getBottomCoordinate(2)) {
 					if(box.getColor() != hoop.getColor(2)) {
-						that.restartGame();
+						return false;
 					}
 				}
 				else {
 					if(box.getColor() != hoop.getColor(3)) {
-						that.restartGame();
+						return false;
 					}
 				}
 			}
-		});
+		};
+		if(!isHoopPresent && !this.boxColorChanged) {
+			box.changeColor();
+			this.boxColorChanged = true;
+		}
+		return true;
 	}
 
-	restartGame() {
-		clearInterval(timer);
-		console.log(timer);
+	clearHoopCollection() {
+		this.hoopCollection.forEach(function(hoop) {
+			hoop.removeHoops();
+		});
+		this.hoopCollection = [];
 	}
 }
 
@@ -197,6 +211,15 @@ class Game {
 		this.box = new Box();
 		this.hoops = new HoopCollection();
 		this.setEvents();
+		this.timer = null;
+		this.frameRate = 1000.0/60.0;
+		this.startRenderTimer();
+	}
+
+	restartGame() {
+		this.hoops.clearHoopCollection();
+		clearInterval(this.timer);
+		this.startRenderTimer();
 	}
 
 	setEvents() {
@@ -208,23 +231,26 @@ class Game {
 		});
 	}
 
+	startRenderTimer() {
+		const that = this;
+		this.timer = setInterval(()=>that.render(), this.frameRate);
+	}
+
 	render() {
 		this.box.render(); 
 		this.hoops.hoopCollection.forEach(function(element) {
 			element.render();
 		});
-		this.hoops.checkValidPlay(this.box);
+		if(!this.hoops.checkValidPlay(this.box)) {
+			console.log("GAME OVER");
+			this.restartGame();
+		}
 	}
 }
 
 let game;
-let timer;
 
 $(document).ready(function() {
+
 	game = new Game();
-	let frameRate = 1000.0/60.0;
-	timer = setInterval(()=> game.render(), frameRate);
-	// if(timer === 3) {
-	// 	timer = setInterval(()=> game.render(), frameRate);
-	// }
 });

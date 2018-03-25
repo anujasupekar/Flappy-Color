@@ -12,7 +12,7 @@ body {
 .box {
 	height: 20px;
     width: 20px;
-    border-radius: 50%;
+    /*border-radius: 50%;*/
     position: absolute;
 }
 

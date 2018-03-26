@@ -25,7 +25,6 @@ class Box {
 	}
 
 	changeColor() {
-		console.log("i come here");
 		$(this.elementRef).css('background', this.colors[Math.floor(Math.random() * this.colors.length)]);
 	}
 
@@ -166,7 +165,7 @@ class HoopCollection {
 			}, 2000);
 	}
 
-	checkValidPlay(box) {
+	checkValidPlay(box, score) {
 		let isHoopPresent = false;
 		for(let i=0; i<this.hoopCollection.length; i++) {
 			const hoop = this.hoopCollection[i];
@@ -193,6 +192,7 @@ class HoopCollection {
 		if(!isHoopPresent && !this.boxColorChanged) {
 			box.changeColor();
 			this.boxColorChanged = true;
+			score.calculateScore();
 		}
 		return true;
 	}
@@ -205,11 +205,38 @@ class HoopCollection {
 	}
 }
 
+class Score  {
+	constructor() {
+		this.currentScore = -1;
+		this.bestScore = 0;
+		this.render();
+	}
+
+	calculateScore() {
+		this.currentScore += 1;
+		this.render();
+	}
+
+	calculateBestScore() {
+		this.bestScore = Math.max(this.currentScore, this.bestScore);
+	}
+
+	resetScore() {
+		this.currentScore = -1;
+		this.render();
+	}
+
+	render() {
+		$("#score").html(this.currentScore);
+	}
+}
+
 class Game {
 
 	constructor() {
 		this.box = new Box();
 		this.hoops = new HoopCollection();
+		this.score = new Score();
 		this.setEvents();
 		this.timer = null;
 		this.frameRate = 1000.0/60.0;
@@ -241,9 +268,9 @@ class Game {
 		this.hoops.hoopCollection.forEach(function(element) {
 			element.render();
 		});
-		if(!this.hoops.checkValidPlay(this.box)) {
-			console.log("GAME OVER");
+		if(!this.hoops.checkValidPlay(this.box, this.score)) {
 			this.restartGame();
+			this.score.resetScore();
 		}
 	}
 }

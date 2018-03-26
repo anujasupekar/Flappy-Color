@@ -12,7 +12,7 @@ body {
 .box {
 	height: 20px;
     width: 20px;
-    /*border-radius: 50%;*/
+    border-radius: 50%;
     position: absolute;
 }
 
@@ -20,4 +20,17 @@ body {
 	height: 130px;
 	width: 50px;
 	position: absolute;
+}
+
+.score {
+    height: 40px;
+    width: 60px;
+    left: 700px;
+    top: 15px;
+    border: 2px solid #777;
+    z-index: 1;
+    text-align: center;
+    padding-top: 7px;
+    font-size: 35px;
+    position: absolute;
 }

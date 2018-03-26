@@ -57,7 +57,8 @@ class Hoops {
 		this.position1 = {top: 0, left: 750};
 		this.position2 = {top: 135, left: 750};
 		this.position3 = {top: 270, left: 750};
-		this.colors = ['red', 'green', 'blue'];
+		this.colorObj = new Color();
+		this.hoopColors = this.colorObj.getHoopColors();
 		this.hoop1 = this.createHoop(0);
 		this.hoop2 = this.createHoop(1);
 		this.hoop3 = this.createHoop(2);
@@ -67,7 +68,7 @@ class Hoops {
 	createHoop(colorIndex) {
 		let hoop = document.createElement('div');
 		$(hoop).addClass('hoops');
-		$(hoop).css('background', this.colors[colorIndex]);
+		$(hoop).css('background', this.hoopColors[colorIndex]);
 		$("#gameContainer").append(hoop);
 		return $(hoop);
 	}
@@ -151,7 +152,8 @@ class Hoops {
 
 class HoopCollection {
 
-	constructor() {
+	constructor(box) {
+		const boxObject = box;
 		this.hoopCollection = [];
 		this.createHoops();
 		this.boxColorChanged = false;
@@ -205,6 +207,35 @@ class HoopCollection {
 	}
 }
 
+class Color {
+	constructor() {
+		this.colors = ['red', 'green', 'blue', 'yellow', 'brown', 'orange'];
+		this.hoopColors = [];
+		//this.boxColor = null;	
+	}
+
+	getHoopColors() {
+		const firstHoopColorIndex = Math.floor(Math.random() * this.colors.length);
+		let firstHoopColor = this.colors[firstHoopColorIndex];
+		let secondHoopColorIndex = Math.floor(Math.random() * this.colors.length);
+		while(firstHoopColorIndex === secondHoopColorIndex) {
+			secondHoopColorIndex = Math.floor(Math.random() * this.colors.length);
+		}
+		let secondHoopColor = this.colors[secondHoopColorIndex];
+		let thirdHoopColorIndex = Math.floor(Math.random() * this.colors.length);
+		while((thirdHoopColorIndex === firstHoopColorIndex) || (thirdHoopColorIndex === secondHoopColorIndex)) {
+			thirdHoopColorIndex = Math.floor(Math.random() * this.colors.length);
+		}
+		let thirdHoopColor = this.colors[thirdHoopColorIndex];
+		this.hoopColors = [firstHoopColor, secondHoopColor, thirdHoopColor];
+		return this.hoopColors;
+	}
+
+	getBoxColor() {
+		return this.hoopColors[Math.floor(Math.random() * this.hoopColors.length)];
+	}
+}
+
 class Score  {
 	constructor() {
 		this.currentScore = -1;
@@ -245,7 +276,7 @@ class Game {
 
 	constructor() {
 		this.box = new Box();
-		this.hoops = new HoopCollection();
+		this.hoops = new HoopCollection(this.box);
 		this.score = new Score();
 		this.setEvents();
 		this.timer = null;

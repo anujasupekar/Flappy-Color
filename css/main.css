@@ -34,3 +34,49 @@ body {
     font-size: 35px;
     position: absolute;
 }
+
+.scoreContainer {
+    height: 400px;
+    width: 800px;
+    border: 1px solid #777;
+    position: relative;
+    display: none;
+}
+
+#bestScoreText {
+    top: 130px;
+    left: 325px;
+    position: absolute;
+}
+
+#bestScore {
+    top: 160px;
+    left: 365px;
+    font-size: 25px;
+    position: absolute;
+}
+
+#currentScoreText {
+    position: absolute;
+    top: 200px;
+    left: 315px;
+}
+
+#currentScore {
+    position: absolute;
+    top: 200px;
+    left: 425px;
+}
+
+#resetBtn {
+    border-color: red;
+    border-width: 3px;
+    top: 230px;
+    left: 338px;
+    position: absolute;
+}
+
+
+
+
+

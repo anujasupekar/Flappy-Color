@@ -192,7 +192,7 @@ class HoopCollection {
 		if(!isHoopPresent && !this.boxColorChanged) {
 			box.changeColor();
 			this.boxColorChanged = true;
-			score.calculateScore();
+			score.calculateCurrentScore();
 		}
 		return true;
 	}
@@ -212,7 +212,7 @@ class Score  {
 		this.render();
 	}
 
-	calculateScore() {
+	calculateCurrentScore() {
 		this.currentScore += 1;
 		this.render();
 	}
@@ -224,6 +224,16 @@ class Score  {
 	resetScore() {
 		this.currentScore = -1;
 		this.render();
+	}
+
+	renderBestScore() {
+		this.calculateBestScore();
+		$("#bestScore").html(this.bestScore);
+	}
+
+	renderCurrentScore() {
+		$("#currentScore").html(this.currentScore);
+		this.resetScore();
 	}
 
 	render() {
@@ -243,10 +253,13 @@ class Game {
 		this.startRenderTimer();
 	}
 
-	restartGame() {
+	startGame() {
+		this.startRenderTimer();
+	}
+
+	stopGame() {
 		this.hoops.clearHoopCollection();
 		clearInterval(this.timer);
-		this.startRenderTimer();
 	}
 
 	setEvents() {
@@ -256,11 +269,34 @@ class Game {
 				that.box.jump();
 			}
 		});
+
+		$("#resetBtn").click(function() {
+			that.showGameContainer();
+			that.startGame();
+		});
+	}
+
+	showScoreContainer() {
+		$("#gameContainer").hide();
+		$("#scoreContainer").show();
+
+	}
+
+	showGameContainer() {
+		$("#scoreContainer").hide();
+		$("#gameContainer").show();
 	}
 
 	startRenderTimer() {
 		const that = this;
 		this.timer = setInterval(()=>that.render(), this.frameRate);
+	}
+
+	onGameOver() {
+		this.stopGame();
+		this.score.renderBestScore();
+		this.score.renderCurrentScore();
+		this.showScoreContainer();
 	}
 
 	render() {
@@ -269,8 +305,7 @@ class Game {
 			element.render();
 		});
 		if(!this.hoops.checkValidPlay(this.box, this.score)) {
-			this.restartGame();
-			this.score.resetScore();
+			this.onGameOver();
 		}
 	}
 }

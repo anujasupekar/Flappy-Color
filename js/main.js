@@ -10,7 +10,6 @@ class Box {
 		this.gravity = 0.25;
 		this.bounce = -4.6;
 		this.boxPosition = {top: 0, left: 150};
-		this.colors = ['red', 'green', 'blue'];
 		this.elementRef = $("#box");
 		this.setPosition();
 	}
@@ -24,8 +23,12 @@ class Box {
 		return $(this.elementRef).css('background');
 	}
 
-	changeColor() {
-		$(this.elementRef).css('background', this.colors[Math.floor(Math.random() * this.colors.length)]);
+	changeBoxColor(boxColors) {
+		$(this.elementRef).css('background', this.getNextColor(boxColors));
+	}
+
+	getNextColor(boxColors) {
+		return boxColors[Math.floor(Math.random() * boxColors.length)]
 	}
 
 	limitBounds() {
@@ -52,13 +55,13 @@ class Box {
 
 class Hoops {
 
-	constructor() {
+	constructor(colorObject) {
+		let colorRef = colorObject;
 		this.velocity = -1.5;
 		this.position1 = {top: 0, left: 750};
 		this.position2 = {top: 135, left: 750};
 		this.position3 = {top: 270, left: 750};
-		this.colorObj = new Color();
-		this.hoopColors = this.colorObj.getHoopColors();
+		this.hoopColors = colorRef.getHoopColors(3);
 		this.hoop1 = this.createHoop(0);
 		this.hoop2 = this.createHoop(1);
 		this.hoop3 = this.createHoop(2);
@@ -87,9 +90,9 @@ class Hoops {
 	}
 
 	removeHoops() {
-		$(this.hoop1).remove();
-		$(this.hoop2).remove();
-		$(this.hoop3).remove();
+		this.hoop1.remove();
+		this.hoop2.remove();
+		this.hoop3.remove();
 	}
 
 	leftEdge() {
@@ -142,6 +145,13 @@ class Hoops {
 		}
 	}
 
+	isPassingOverBox() {
+		if(this.leftEdge()<=169 && this.leftEdge()>99) {
+			return true;
+		}
+		return false;
+	}
+	
 	render() {
 		this.position1.left += this.velocity;
 		this.position2.left += this.velocity;
@@ -152,18 +162,18 @@ class Hoops {
 
 class HoopCollection {
 
-	constructor(box) {
-		const boxObject = box;
+	constructor() {
+		this.colorObj = new Color();
 		this.hoopCollection = [];
 		this.createHoops();
+		this.nextHoopIndex = 0;
 		this.boxColorChanged = false;
-		this.interval = null;
 	}
 
 	createHoops() {
 		const that = this;
 		this.interval = setInterval(function() {
-			that.hoopCollection.push(new Hoops());
+			that.hoopCollection.push(new Hoops(that.colorObj));
 			}, 2000);
 	}
 
@@ -171,7 +181,8 @@ class HoopCollection {
 		let isHoopPresent = false;
 		for(let i=0; i<this.hoopCollection.length; i++) {
 			const hoop = this.hoopCollection[i];
-			if(hoop.leftEdge()<=169 && hoop.leftEdge()>99) {
+			if(hoop.isPassingOverBox()) {
+				this.nextHoopIndex = i+1;
 				isHoopPresent = true;
 				this.boxColorChanged = false;
 				if(box.boxPosition.top <= hoop.getBottomCoordinate(1)) {
@@ -192,11 +203,30 @@ class HoopCollection {
 			}
 		};
 		if(!isHoopPresent && !this.boxColorChanged) {
-			box.changeColor();
+			this.onPassingEachHoop(box, score);
+		}
+		return true;
+	}
+
+	onPassingEachHoop(box, score) {
+		if(this.nextHoopIndex < this.hoopCollection.length) {
+			const boxColors = this.getNextHoopColorsByIndex();
+			box.changeBoxColor(boxColors); 
 			this.boxColorChanged = true;
 			score.calculateCurrentScore();
 		}
-		return true;
+	}
+
+	getNextHoopColorsByIndex() {
+		return this.hoopCollection[this.nextHoopIndex].hoopColors;
+	}
+
+	restartHoopGeneration() {
+		this.createHoops();
+	}
+
+	stopHoopGenerationTimer() {
+		clearInterval(this.interval);
 	}
 
 	clearHoopCollection() {
@@ -204,48 +234,42 @@ class HoopCollection {
 			hoop.removeHoops();
 		});
 		this.hoopCollection = [];
+		this.nextHoopIndex = 0;
 	}
 }
 
 class Color {
 	constructor() {
 		this.colors = ['red', 'green', 'blue', 'yellow', 'brown', 'orange'];
-		this.hoopColors = [];
-		//this.boxColor = null;	
 	}
 
-	getHoopColors() {
-		const firstHoopColorIndex = Math.floor(Math.random() * this.colors.length);
-		let firstHoopColor = this.colors[firstHoopColorIndex];
-		let secondHoopColorIndex = Math.floor(Math.random() * this.colors.length);
-		while(firstHoopColorIndex === secondHoopColorIndex) {
-			secondHoopColorIndex = Math.floor(Math.random() * this.colors.length);
+	getHoopColors(numberOfColors) {
+		if(numberOfColors > this.colors.length) {
+			return this.colors;
 		}
-		let secondHoopColor = this.colors[secondHoopColorIndex];
-		let thirdHoopColorIndex = Math.floor(Math.random() * this.colors.length);
-		while((thirdHoopColorIndex === firstHoopColorIndex) || (thirdHoopColorIndex === secondHoopColorIndex)) {
-			thirdHoopColorIndex = Math.floor(Math.random() * this.colors.length);
+		let hoopColors = [];
+		while(hoopColors.length < numberOfColors) {
+			const hoopColor = this.getNextColor();
+			if(!hoopColors.includes(hoopColor)) {
+				hoopColors.push(hoopColor);
+			}
 		}
-		let thirdHoopColor = this.colors[thirdHoopColorIndex];
-		this.hoopColors = [firstHoopColor, secondHoopColor, thirdHoopColor];
-		return this.hoopColors;
+		return hoopColors;
 	}
 
-	getBoxColor() {
-		return this.hoopColors[Math.floor(Math.random() * this.hoopColors.length)];
+	getNextColor() {
+		return this.colors[Math.floor(Math.random() * this.colors.length)];
 	}
 }
 
 class Score  {
 	constructor() {
-		this.currentScore = -1;
+		this.resetScore();
 		this.bestScore = 0;
-		this.render();
 	}
 
 	calculateCurrentScore() {
-		this.currentScore += 1;
-		this.render();
+		this.setCurrentScore(this.currentScore+1);
 	}
 
 	calculateBestScore() {
@@ -253,8 +277,7 @@ class Score  {
 	}
 
 	resetScore() {
-		this.currentScore = -1;
-		this.render();
+		this.setCurrentScore(-1);
 	}
 
 	renderBestScore() {
@@ -264,10 +287,16 @@ class Score  {
 
 	renderCurrentScore() {
 		$("#currentScore").html(this.currentScore);
+	}
+
+	onGameOver() {
+		this.renderBestScore();
+		this.renderCurrentScore();
 		this.resetScore();
 	}
 
-	render() {
+	setCurrentScore(val) {
+		this.currentScore = val;
 		$("#score").html(this.currentScore);
 	}
 }
@@ -275,9 +304,9 @@ class Score  {
 class Game {
 
 	constructor() {
-		this.box = new Box();
-		this.hoops = new HoopCollection(this.box);
+		this.hoops = new HoopCollection();
 		this.score = new Score();
+		this.box = new Box();
 		this.setEvents();
 		this.timer = null;
 		this.frameRate = 1000.0/60.0;
@@ -285,12 +314,14 @@ class Game {
 	}
 
 	startGame() {
+		this.hoops.restartHoopGeneration();
 		this.startRenderTimer();
 	}
 
 	stopGame() {
-		this.hoops.clearHoopCollection();
 		clearInterval(this.timer);
+		this.hoops.stopHoopGenerationTimer();
+		this.hoops.clearHoopCollection();
 	}
 
 	setEvents() {
@@ -325,16 +356,15 @@ class Game {
 
 	onGameOver() {
 		this.stopGame();
-		this.score.renderBestScore();
-		this.score.renderCurrentScore();
+		this.score.onGameOver();
 		this.showScoreContainer();
 	}
 
-	render() {
-		this.box.render(); 
+	render() { 
 		this.hoops.hoopCollection.forEach(function(element) {
 			element.render();
 		});
+		this.box.render();
 		if(!this.hoops.checkValidPlay(this.box, this.score)) {
 			this.onGameOver();
 		}
